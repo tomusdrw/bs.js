@@ -1,6 +1,6 @@
 bs.util.Canvas = function(canv) {
 	this.canvas = bs.$(canv);
-	this.ctx = this.canvas.getContext('2d');
+	this.ctx = this.canvas[0].getContext('2d');
 };
 
 bs.util.Canvas.prototype = bs.Object.create({
