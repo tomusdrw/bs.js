@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Notifier example</title>
+		<style type="text/css">
+			*{margin:0;padding:0}
+			body{text-align:center}
+		</style>
+		<!-- bs.js -->
+		<script src="../bs.js" type="text/javascript"></script>
+		<script src="../util/Notifier.js" type="text/javascript"></script>
+		<!-- /bs.js -->
+	</head>
+	<body>
+		<iframe id="dummy_background" width="95%" height="95%" src="http://google.pl">
+		</iframe>
+		<div id="notifier">
+		</div>
+		<script type="text/javascript">
+			(function(e){
+				var notifier = new bs.util.Notifier(e);
+				
+			})('notifier');
+		</script>
+	</body>
+</html>

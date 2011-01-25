@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+	<title>bs.js tests</title>
+	<link rel="stylesheet" href="http://code.jquery.com/qunit/git/qunit.css" type="text/css" media="screen" />
+	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+	<script type="text/javascript" src="http://code.jquery.com/qunit/git/qunit.js"></script>
+	<!-- bs.js -->
+	<script type="text/javascript" src="bs.js"></script>
+	<!-- /bs.js -->
+	<script type="text/javascript">
+	$(function(){
+		var body = $.body;
+		module("bs.js");
+
+		test("Basic selector bs.$", function(){
+			var x,y,sel;
+			x = bs.$(undefined);
+			equals(x, null, 'Selecting undefined.');
+
+			x = bs.$(null);
+			equals(x, null, 'Selecting null.');
+
+			x = bs.$('abc');
+			equals(x, null, 'Selecting unexisting.');
+
+			x = bs.$('qunit-header');
+			equals(typeof x, 'object', 'Type of returned existing element.');
+
+			sel = 'qunit-tests';
+			x = bs.$(sel);
+			equals(x[0], document.getElementById(sel), 'DOMObject reference check.');
+		});
+		test("Adding class to object bs.$.addClass", function() {
+			var x,init,y;
+			x = document.createElement('div');
+			init =  'test abc xyz';
+			x.className = init;
+			y = bs.$(x);
+			y.addClass('test2');
+			equals(x.className, init + ' test2', 'Adding class to object with existing classes.');
+
+			x = document.createElement('div');
+			x.className = '';
+			y = bs.$(x);
+			y.addClass('test2');
+			equals(x.className, 'test2', 'Adding class to object with no classes.');
+
+			x = document.createElement('div');
+			init = 'test abc xyz test2 test8';
+			x.className = init;
+			y = bs.$(x);
+			y.addClass('test2');
+			equals(x.className, init, 'Adding class that exists should not change class string.');
+
+			x = document.createElement('div');
+			init  =  'test abc xyz';
+			x.className = init;
+			y = bs.$(x);
+			y.addClass('test2');
+			y.addClass('test5');
+			equals(x.className, init + ' test2 test5', 'Adding multiple classes.');
+		});
+		
+		test("Removing classes from object bs.$.removeClass", function() {
+			var x,y;
+			x = document.createElement('div');
+			x.className = 'test xyz abc';
+			y = bs.$(x);
+			y.removeClass('test');
+			equals(x.className, 'xyz abc', 'Removing class from the begining.');
+
+			x = document.createElement('div');
+			x.className = 'test xyz abc';
+			y = bs.$(x);
+			y.removeClass('xyz');
+			equals(x.className, 'test abc', 'Removing class from the middle.');
+
+			x = document.createElement('div');
+			x.className = 'test xyz abc';
+			y = bs.$(x);
+			y.removeClass('abc');
+			equals(x.className, 'test xyz', 'Removing class from the end.');
+
+			x = document.createElement('div');
+			x.className = 'test xyz abc';
+			y = bs.$(x);
+			y.removeClass('test2');
+			equals(x.className, 'test xyz abc', 'Removing non-existing class from class string.');
+		});
+	});
+	</script>
+
+</head>
+<body>
+	<h1 id="qunit-header">bs.js tests</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup, will be hidden</div>
+</body>
+</html>
