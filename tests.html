@@ -11,47 +11,55 @@
 	<script type="text/javascript">
 	$(function(){
 		var body = $.body;
-		module("bs.js");
 
+		/**
+		 * Tests for bs.DOMObject and bs.$ selector
+		 */
+		module("bs.js - bs.DOMObject");
 		test("Basic selector bs.$", function(){
 			var x,y,sel;
 			x = bs.$(undefined);
-			equals(x, null, 'Selecting undefined.');
+			equal(x, null, 'Selecting undefined.');
 
 			x = bs.$(null);
-			equals(x, null, 'Selecting null.');
+			equal(x, null, 'Selecting null.');
 
 			x = bs.$('abc');
-			equals(x, null, 'Selecting unexisting.');
+			equal(x, null, 'Selecting unexisting.');
 
 			x = bs.$('qunit-header');
-			equals(typeof x, 'object', 'Type of returned existing element.');
+			equal(typeof x, 'object', 'Type of returned existing element.');
 
 			sel = 'qunit-tests';
 			x = bs.$(sel);
-			equals(x[0], document.getElementById(sel), 'DOMObject reference check.');
+			equal(x[0], document.getElementById(sel), 'DOMObject reference check.');
+
+			sel = document.getElementById(sel);
+			x = bs.$(sel);
+			equal(x[0], sel, 'Passing DOMObject as argument.');
 		});
-		test("Adding class to object bs.$.addClass", function() {
+		
+		test("Adding class to object bs.DOMObject.addClass", function() {
 			var x,init,y;
 			x = document.createElement('div');
 			init =  'test abc xyz';
 			x.className = init;
 			y = bs.$(x);
 			y.addClass('test2');
-			equals(x.className, init + ' test2', 'Adding class to object with existing classes.');
+			equal(x.className, init + ' test2', 'Adding class to object with existing classes.');
 
 			x = document.createElement('div');
 			x.className = '';
 			y = bs.$(x);
 			y.addClass('test2');
-			equals(x.className, 'test2', 'Adding class to object with no classes.');
+			equal(x.className, 'test2', 'Adding class to object with no classes.');
 
 			x = document.createElement('div');
 			init = 'test abc xyz test2 test8';
 			x.className = init;
 			y = bs.$(x);
 			y.addClass('test2');
-			equals(x.className, init, 'Adding class that exists should not change class string.');
+			equal(x.className, init, 'Adding class that exists should not change class string.');
 
 			x = document.createElement('div');
 			init  =  'test abc xyz';
@@ -59,34 +67,151 @@
 			y = bs.$(x);
 			y.addClass('test2');
 			y.addClass('test5');
-			equals(x.className, init + ' test2 test5', 'Adding multiple classes.');
+			equal(x.className, init + ' test2 test5', 'Adding multiple classes.');
 		});
 		
-		test("Removing classes from object bs.$.removeClass", function() {
+		test("Removing classes from object bs.DOMObject.removeClass", function() {
 			var x,y;
 			x = document.createElement('div');
 			x.className = 'test xyz abc';
 			y = bs.$(x);
 			y.removeClass('test');
-			equals(x.className, 'xyz abc', 'Removing class from the begining.');
+			equal(x.className, 'xyz abc', 'Removing class from the begining.');
 
 			x = document.createElement('div');
 			x.className = 'test xyz abc';
 			y = bs.$(x);
 			y.removeClass('xyz');
-			equals(x.className, 'test abc', 'Removing class from the middle.');
+			equal(x.className, 'test abc', 'Removing class from the middle.');
 
 			x = document.createElement('div');
 			x.className = 'test xyz abc';
 			y = bs.$(x);
 			y.removeClass('abc');
-			equals(x.className, 'test xyz', 'Removing class from the end.');
+			equal(x.className, 'test xyz', 'Removing class from the end.');
 
 			x = document.createElement('div');
 			x.className = 'test xyz abc';
 			y = bs.$(x);
 			y.removeClass('test2');
-			equals(x.className, 'test xyz abc', 'Removing non-existing class from class string.');
+			equal(x.className, 'test xyz abc', 'Removing non-existing class from class string.');
+		});
+		test('Changing innerHTML of element. bs.DOMOBject.html', function(){
+			var x,y,z;
+			x = document.createElement('div');
+			y = 'Test innerHTML containing tags <b>absdfsdf</b>';
+			x.innerHTML = y;
+			x = bs.$(x);
+			equal(x.html(), y, 'Return value of empty html() invocation.');
+
+			y = 'New test innerHTML <b>asdf</b> with <span class="abc">tags</span>';
+			x.html(y);
+			equal(x[0].innerHTML, y, 'Setting new innerHTML.');
+		});
+		/**
+		 * Tests for optimisations
+		 */
+		module('bs.js - bs.opt');
+		test('Floor optimisation.', function(){
+			var x,y;
+			y = 1.245;
+			x = Math.floor(y);
+			strictEqual(bs.opt.floor(y), x, 'Checking for '+y);
+			y = 0;
+			x = Math.floor(y);
+			strictEqual(bs.opt.floor(y), x, 'Checking for '+y);
+			y = 0.0;
+			x = Math.floor(y);
+			strictEqual(bs.opt.floor(y), x, 'Checking for '+y);
+			y = -11.2;
+			x = Math.floor(y);
+			strictEqual(bs.opt.floor(y), x, 'Checking for '+y);
+			y = 3;
+			x = Math.floor(y);
+			strictEqual(bs.opt.floor(y), x, 'Checking for '+y);
+			y = -5;
+			x = Math.floor(y);
+			strictEqual(bs.opt.floor(y), x, 'Checking for '+y);
+		});
+
+		/**
+		 * Tests for bs.Object
+		 */
+		module('bs.js - bs.Object');
+		test("Creating object by bs.Object.create", function() {
+			var x,y,i;
+			x = {
+				a: 'a',
+				b: 'b'
+			};
+			y = bs.Object.create(x);
+			ok(bs.Object.prototype.isPrototypeOf(y), 'Checking prototype.');
+			for (i in x) {
+				equal(y[i], x[i], 'Checking if object contains property '+i+' and value matches.');
+			}
+		});
+		test("Merging object by bs.Object.merge", function(){
+			var x,y,z,i;
+			x = {
+				a: 'a',
+				b: 'b'
+			};
+			y = {
+				c: 'c'
+			};
+			z = bs.Object.create(x).merge(y);
+			ok(bs.Object.prototype.isPrototypeOf(z), 'Checking prototype.');
+			for (i in x) {
+				equal(z[i], x[i], 'Checking if object contains property '+i+' from x and value matches.');
+			}
+			for (i in y) {
+				equal(z[i], y[i], 'Checking if object contains property '+i+' from y and value matches.');
+			}
+			x = {
+				a: 'a',
+				b: 'b'
+			};
+			y = {
+				a: 'c',
+				c: 'd'
+			};
+			z = bs.Object.create(x).merge(y);
+			equal(z.a, x.a, "Checking if values is not overwrited.");
+		});
+		test("Inheriting object by bs.Object.inherit (bs.Object.inherit(a) is equivalent to call bs.Object.merge(a.prototype)) (for now)", function(){
+			var x,y,z,i;
+			x = {
+				a: 'a',
+				b: 'b'
+			};
+			x.prototype = {
+				c: 'c',
+				d: 'd'
+			};
+			y = {
+				c: 'c1',
+				e: 'e',
+				f: 'f'
+			};
+			y2 = y;
+			z = bs.Object.create(y).inherit(x);
+			for (i in x) {
+				if (x.hasOwnProperty(i)) {
+					notEqual(z[i], x[i], 'Checking if object contains property '+i+' from x and value not matches.');
+				}
+			}
+			for (i in y) {
+				if (y.hasOwnProperty(i)) {
+					equal(z[i], y[i], 'Checking if object contains property '+i+' from y and value matches.');
+				}
+			}
+			for (i in x.prototype) {
+				if (y2.hasOwnProperty(i)) {
+					equal(z[i], y[i], 'Checking if object property has not been overdefined.');
+				} else {
+					equal(z[i], x.prototype[i], 'Checking if object contains properties from prototype.');
+				}
+			}
 		});
 	});
 	</script>
