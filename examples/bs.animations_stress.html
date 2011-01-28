@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Animations stress example</title>
+		<style type="text/css">
+			*{margin:0;padding:0}
+			body{text-align:center}
+		</style>
+		<!-- bs.js -->
+		<script src="../bs.js" type="text/javascript"></script>
+		<script src="../bs.animations.js" type="text/javascript"></script>
+		<script src="../util/Observable.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var N = 100;
+			var x = (window.location + "").split('?');
+			N = parseInt(x[1], 10) || N;
+		</script>
+		<!-- /bs.js -->
+	</head>
+	<body>
+		<div id="animations">
+			<h1>Number of elements in each group: <script type="text/javascript">document.write(N);</script></h1>
+			<h2>Use address bar to specify different number: <a href="?50">like this</a></h2>
+			<h1><a href="#" id="show">Show</a>/
+				<a href="#" id="hide">hide</a>/
+				<a href="#" id="fadeIn">fadeIn</a>/
+				<a href="#" id="fadeOut">fadeOut</a> paragraph below.</h1>
+			<p id="example">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras commodo neque et erat accumsan semper. Integer nisl nulla, fermentum id convallis non, facilisis in metus. Phasellus condimentum tellus sit amet ligula tincidunt quis aliquam tortor euismod. Cras tortor eros, volutpat sed consequat quis, bibendum et justo. Phasellus dictum, velit in faucibus pharetra, augue mauris sodales odio, id viverra lectus enim vel ipsum. Suspendisse potenti. Vestibulum vestibulum ornare risus sed cursus. Quisque id fringilla felis. Aliquam neque tortor, vulputate non tincidunt non, convallis a nulla. Nulla quis adipiscing nisl. Donec accumsan, lacus vitae pretium viverra, lectus elit adipiscing massa, eu pellentesque ligula odio at augue. Nullam id sem at ligula scelerisque tincidunt ac id lacus. Phasellus nec elementum purus.
+			</p>
+			<script type="text/javascript">
+				var p = bs.$('example').html();
+				for (var i=0;i<N;i+=1) {
+					document.write('<p id="example_'+i+'">'+p+'</p>');
+				}
+			</script>
+			<h1>Second example - animation events.</h1>
+			<h2><a href="#" id="ev_show">show</a> |
+				<a href="#" id="ev_hide">hide</a></h2>
+			<p id="events"></p>
+			<p id="example2">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras commodo neque et erat accumsan semper. Integer nisl nulla, fermentum id convallis non, facilisis in metus. Phasellus condimentum tellus sit amet ligula tincidunt quis aliquam tortor euismod. Cras tortor eros, volutpat sed consequat quis, bibendum et justo. Phasellus dictum, velit in faucibus pharetra, augue mauris sodales odio, id viverra lectus enim vel ipsum. Suspendisse potenti. Vestibulum vestibulum ornare risus sed cursus. Quisque id fringilla felis. Aliquam neque tortor, vulputate non tincidunt non, convallis a nulla. Nulla quis adipiscing nisl. Donec accumsan, lacus vitae pretium viverra, lectus elit adipiscing massa, eu pellentesque ligula odio at augue. Nullam id sem at ligula scelerisque tincidunt ac id lacus. Phasellus nec elementum purus.
+			</p>
+			<script type="text/javascript">
+				p = bs.$('example2').html();
+				for (var i=0;i<N;i+=1) {
+					document.write('<p id="example2_'+i+'">'+p+'</p>');
+				}
+			</script>
+			<h1>Scales animations.</h1>
+			<h2><a href="#" id="scale_show">show(scale)</a> |
+				<a href="#" id="scale_hide">hide(scale)</a></h2>
+			<p id="example3">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras commodo neque et erat accumsan semper. Integer nisl nulla, fermentum id convallis non, facilisis in metus. Phasellus condimentum tellus sit amet ligula tincidunt quis aliquam tortor euismod. Cras tortor eros, volutpat sed consequat quis, bibendum et justo. Phasellus dictum, velit in faucibus pharetra, augue mauris sodales odio, id viverra lectus enim vel ipsum. Suspendisse potenti. Vestibulum vestibulum ornare risus sed cursus. Quisque id fringilla felis. Aliquam neque tortor, vulputate non tincidunt non, convallis a nulla. Nulla quis adipiscing nisl. Donec accumsan, lacus vitae pretium viverra, lectus elit adipiscing massa, eu pellentesque ligula odio at augue. Nullam id sem at ligula scelerisque tincidunt ac id lacus. Phasellus nec elementum purus.
+			</p>
+			<script type="text/javascript">
+				p = bs.$('example3').html();
+				for (var i=0;i<N;i+=1) {
+					document.write('<p id="example3_'+i+'">'+p+'</p>');
+				}
+			</script>
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras commodo neque et erat accumsan semper. Integer nisl nulla, fermentum id convallis non, facilisis in metus. Phasellus condimentum tellus sit amet ligula tincidunt quis aliquam tortor euismod. Cras tortor eros, volutpat sed consequat quis, bibendum et justo. Phasellus dictum, velit in faucibus pharetra, augue mauris sodales odio, id viverra lectus enim vel ipsum. Suspendisse potenti. Vestibulum vestibulum ornare risus sed cursus. Quisque id fringilla felis. Aliquam neque tortor, vulputate non tincidunt non, convallis a nulla. Nulla quis adipiscing nisl. Donec accumsan, lacus vitae pretium viverra, lectus elit adipiscing massa, eu pellentesque ligula odio at augue. Nullam id sem at ligula scelerisque tincidunt ac id lacus. Phasellus nec elementum purus.
+			</p>
+		</div>
+		<script type="text/javascript">
+			(function() {
+				/*
+				 * First paragraph example
+				 */
+				var sh = [bs.$('example')];
+				for (var i=0;i<N;i+=1) {
+					sh.push(bs.$('example_'+i));
+				}
+				bs.$('show').addEventListener('click', (function(x) {
+					for(var e in x) {
+						x[e].show();
+					}
+				}).bind(null, sh));
+				bs.$('hide').addEventListener('click', (function(x) {
+					for(var e in x) {
+						x[e].hide();
+					}
+				}).bind(null, sh));
+				bs.$('fadeIn').addEventListener('click', (function(x){
+					for(var e in x) {
+						x[e].fadeIn();
+					}
+				}).bind(null, sh));
+				bs.$('fadeOut').addEventListener('click', (function(x){
+					for(var e in x) {
+						x[e].fadeOut();
+					}
+				}).bind(null, sh));
+
+				/*
+				 * Second paragraph example
+				 */
+				sh =[bs.$('example2')];
+				for (var i=0;i<N;i+=1) {
+					sh.push(bs.$('example2_'+i));
+				}
+				var event_area = bs.$('events');
+				var events = new bs.util.Observable();
+				//adding start event listener
+				events.addListener('start', (function(ea, element){
+					element[0].style.color = "#f44";
+					ea.html("Start");
+				}).bind(null, event_area));
+				//adding finish event listener
+				events.addListener('finish', (function(ea, element){
+					element[0].style.color = "#222";
+					ea.html("Finish");
+				}).bind(null, event_area));
+
+				bs.$('ev_show').addEventListener('click', (function(x, events){
+					for(var e in x) {
+						x[e].show(1200, {width: false, height: true, opacity: true}, events);
+					}
+				}).bind(null, sh, events));
+				bs.$('ev_hide').addEventListener('click', (function(x, events){
+					for(var e in x) {
+						x[e].hide(600, {width: false, height: true, opacity: true}, events);
+					}
+				}).bind(null, sh, events));
+
+				/**
+				 * Scales animations.
+				 */
+				sh = [bs.$('example3')];
+				for (var i=0;i<N;i+=1) {
+					sh.push(bs.$('example3_'+i));
+				}
+				bs.$('scale_show').addEventListener('click', (function(x){
+					for(var e in x) {
+						x[e].show(500, {width: false, height: true, opacity: false, scaleY: true});
+					}
+				}).bind(null, sh));
+				bs.$('scale_hide').addEventListener('click', (function(x){
+					for(var e in x) {
+						x[e].hide(600, {width: false, height: true, opacity: false, scale: true});
+					}
+				}).bind(null, sh));
+			})();
+		</script>
+	</body>
+</html>
