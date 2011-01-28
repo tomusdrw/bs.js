@@ -13,7 +13,7 @@ bs.DOMObject.prototype.__constructors.push(function(ctx, elem) {
 });
 //extend prototype
 bs.DOMObject.prototype = bs.opt.mix({
-	__animationInterval: 5,
+	__animationInterval: 7,
 	__defaultTime: 500,
 	__propsUnits: {
 		width: 'px',
