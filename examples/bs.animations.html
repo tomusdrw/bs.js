@@ -29,6 +29,15 @@
 			<p id="example2">
 				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras commodo neque et erat accumsan semper. Integer nisl nulla, fermentum id convallis non, facilisis in metus. Phasellus condimentum tellus sit amet ligula tincidunt quis aliquam tortor euismod. Cras tortor eros, volutpat sed consequat quis, bibendum et justo. Phasellus dictum, velit in faucibus pharetra, augue mauris sodales odio, id viverra lectus enim vel ipsum. Suspendisse potenti. Vestibulum vestibulum ornare risus sed cursus. Quisque id fringilla felis. Aliquam neque tortor, vulputate non tincidunt non, convallis a nulla. Nulla quis adipiscing nisl. Donec accumsan, lacus vitae pretium viverra, lectus elit adipiscing massa, eu pellentesque ligula odio at augue. Nullam id sem at ligula scelerisque tincidunt ac id lacus. Phasellus nec elementum purus.
 			</p>
+			<h1>Scales animations.</h1>
+			<h2><a href="#" id="scale_show">show(scale)</a> |
+				<a href="#" id="scale_hide">hide(scale)</a></h2>
+			<p id="example3">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras commodo neque et erat accumsan semper. Integer nisl nulla, fermentum id convallis non, facilisis in metus. Phasellus condimentum tellus sit amet ligula tincidunt quis aliquam tortor euismod. Cras tortor eros, volutpat sed consequat quis, bibendum et justo. Phasellus dictum, velit in faucibus pharetra, augue mauris sodales odio, id viverra lectus enim vel ipsum. Suspendisse potenti. Vestibulum vestibulum ornare risus sed cursus. Quisque id fringilla felis. Aliquam neque tortor, vulputate non tincidunt non, convallis a nulla. Nulla quis adipiscing nisl. Donec accumsan, lacus vitae pretium viverra, lectus elit adipiscing massa, eu pellentesque ligula odio at augue. Nullam id sem at ligula scelerisque tincidunt ac id lacus. Phasellus nec elementum purus.
+			</p>
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras commodo neque et erat accumsan semper. Integer nisl nulla, fermentum id convallis non, facilisis in metus. Phasellus condimentum tellus sit amet ligula tincidunt quis aliquam tortor euismod. Cras tortor eros, volutpat sed consequat quis, bibendum et justo. Phasellus dictum, velit in faucibus pharetra, augue mauris sodales odio, id viverra lectus enim vel ipsum. Suspendisse potenti. Vestibulum vestibulum ornare risus sed cursus. Quisque id fringilla felis. Aliquam neque tortor, vulputate non tincidunt non, convallis a nulla. Nulla quis adipiscing nisl. Donec accumsan, lacus vitae pretium viverra, lectus elit adipiscing massa, eu pellentesque ligula odio at augue. Nullam id sem at ligula scelerisque tincidunt ac id lacus. Phasellus nec elementum purus.
+			</p>
 		</div>
 		<script type="text/javascript">
 			(function() {
@@ -67,11 +76,23 @@
 				}).bind(null, event_area));
 
 				bs.$('ev_show').addEventListener('click', (function(e, events){
-					e.show(1500, {width: false, height: true, opacity: true}, events);
+					e.show(1200, {width: false, height: true, opacity: true}, events);
 				}).bind(null, sh, events));
 				bs.$('ev_hide').addEventListener('click', (function(e, events){
 					e.hide(600, {width: false, height: true, opacity: true}, events);
 				}).bind(null, sh, events));
+
+				/**
+				 * Scales animations.
+				 */
+				sh = bs.$('example3');
+
+				bs.$('scale_show').addEventListener('click', (function(e){
+					e.show(500, {width: false, height: true, opacity: false, scaleY: true});
+				}).bind(null, sh));
+				bs.$('scale_hide').addEventListener('click', (function(e){
+					e.hide(600, {width: false, height: true, opacity: false, scale: true});
+				}).bind(null, sh));
 			})();
 		</script>
 	</body>
