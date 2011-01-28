@@ -9,10 +9,13 @@ bs.DOMObject.prototype.__constructors.push(function(ctx, elem) {
 	ctx._hideStart = ctx._hideStart.bind(ctx);
 	ctx._hideEnd = ctx._hideEnd.bind(ctx);
 	ctx._destroyEnd = ctx._destroyEnd.bind(ctx);
+	ctx._fadeOutStart = ctx._fadeOutStart.bind(ctx);
+	ctx._fadeInStart = ctx._fadeInStart.bind(ctx);
 });
 //extend prototype
 bs.DOMObject.prototype = bs.opt.mix({
 	__animationInterval: 5,
+	__defaultTime: 500,
 	__propsUnits: {
 		width: 'px',
 		height: 'px',
@@ -76,7 +79,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 		//run user's finish Event
 		if (events && events.triggerEvent) {
-			events.triggerEvent('finish');
+			events.triggerEvent('finish', this);
 		}
 		this.__currentAnimation = null;
 	},
@@ -156,9 +159,12 @@ bs.DOMObject.prototype = bs.opt.mix({
 			return;
 		}
 
-		var x,vals,frames,i,j,unit;
+		var x,vals,frames,i,j,unit,end;
 		vals = {};
 		frames = time/this.__animationInterval;
+		if (isNaN(frames) || frames <= 0) {
+			console.log("Frames is "+frames+". Did you set time correctly?");
+		}
 		// Animation
 		for (i in params) {
 			if (params.hasOwnProperty(i)) {
@@ -166,6 +172,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 				vals[i] = [];
 				//push last value as first element
 				vals[i].push(params[i]);
+				
 				//get current value
 				switch(i) {
 					case 'width':
@@ -177,6 +184,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 					default:
 						x = this[0].style[i] || this.__propsDefaultVals[i];
 				}
+				
 				//to float
 				x = bs.opt.number(x || 0);
 				//create vector of values
@@ -186,7 +194,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 				//append unit suffix if any
 				unit = this.__propsUnits[i] || false;
 				if (unit) {
-					for (j=0;j<frames;j+=1) {
+					for (j=0,end=vals[i].length;j<end;j+=1) {
 						vals[i][j] += unit;
 					}
 				}
@@ -202,7 +210,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 		//run start animation event
 		if (events && events.triggerEvent) {
-			events.triggerEvent('start');
+			events.triggerEvent('start', this);
 		}
 		//launch animation
 		this.__currentAnimation();
@@ -212,12 +220,14 @@ bs.DOMObject.prototype = bs.opt.mix({
 		//setting default width/height
 		var s = this[1].style;
 		var s2 = this[0].style;
-		s.display = "block";
+		s.display = s.display || 'block';
+
 		s.width = this[0].offsetWidth+'px';
 		s2.width = s.width;
 		s.height = this[0].offsetHeight+'px';
 		s2.height = s.height;
-		s.display = this[0].style.display;
+		s.opacity = this[0].style.opacity || 1.0;
+		s2.opacity = s.opacity;
 	},
 	_hideStart: function() {
 		//creating copy
@@ -230,21 +240,20 @@ bs.DOMObject.prototype = bs.opt.mix({
 	},
 	_showEnd: function() {
 		var s = this[0].style;
-		if (this[1]) {
-			var s1 = this[1].style;
-			s.display = s1.display;
-			s.overflow = s1.overflow;
-		}
+		var s1 = this[1].style;
+		s.display = s1.display;
+		s.overflow = s1.overflow;
 	},
 	_hideEnd: function() {
 		this[0].style.display = "none";
 	},
 	_showStart: function() {
 		this[0].style.display = "block";
+		this[0].style.overflow = 'hidden';
 	},
 	show: function(time, params, events) {
-		if (typeof time === 'undefined') {
-			time = 500;
+		if (this.isUndefined(time)) {
+			time = this.__defaultTime;
 		}
 		if (time <= 0) {
 			this._showEnd();
@@ -257,17 +266,22 @@ bs.DOMObject.prototype = bs.opt.mix({
 		});
 		if (! events) {
 			events = {};
+		} else {
+			events = bs.opt.mix({}, events);
 		}
-		if (!events.onStart) {
+		if (this.isUndefined(events.onStart)) {
 			events.onStart = this._showStart;
 		}
-		if (!events.onFinish) {
+		if (this.isUndefined(events.onFinish)) {
 			events.onFinish =  this._showEnd;
+		}
+		if (!this[1]) {
+			this._createCopy();
 		}
 		for (var i in params) {
 			if (params.hasOwnProperty(i)) {
 				if (params[i] === true) {
-					if (this[1].style[i].length) {
+					if (this[1] && this[1].style[i].length) {
 						params[i] = bs.opt.number(this[1].style[i].replace('px', ''));
 					} else {
 						params[i] = this.__propsDefaultVals[i] || 0;
@@ -278,12 +292,12 @@ bs.DOMObject.prototype = bs.opt.mix({
 			}
 		}
 
-		this._animate(time, params, 'linear', events);
+		this._animate(time, params, 'ease-in', events);
 		return this;
 	},
 	hide: function(time, params, events) {
-		if (typeof time === 'undefined') {
-			time = 500;
+		if (this.isUndefined(time)) {
+			time = this.__defaultTime;
 		}
 		if (time <= 0) {
 			this._hideEnd();
@@ -296,11 +310,13 @@ bs.DOMObject.prototype = bs.opt.mix({
 		});
 		if (! events) {
 			events = {};
+		} else {
+			events = bs.opt.mix({}, events);
 		}
-		if (!events.onStart) {
+		if (this.isUndefined(events.onStart)) {
 			events.onStart = this._hideStart;
 		}
-		if (!events.onFinish) {
+		if (this.isUndefined(events.onFinish)) {
 			events.onFinish =  this._hideEnd;
 		}
 		for (var i in params) {
@@ -329,7 +345,48 @@ bs.DOMObject.prototype = bs.opt.mix({
 		if (! events) {
 			events = {};
 		}
-		events.onFinish = this._destroyEnd;
+		if (this.isUndefined(events.onFinish)) {
+			events.onFinish = this._destroyEnd;
+		}
 		return this.hide(time, params, events);
+	},
+	_fadeOutStart: function() {
+		if (!this[1]) {
+			this._createCopy();
+		}
+	},
+	fadeOut: function(time, events) {
+		if (! events) {
+			events = {};
+		}
+		if (time <= 0) {
+			time = 1;
+		} else if (this.isUndefined(time)) {
+			time = this.__defaultTime;
+		}
+		events.onStart = this._fadeOutStart;
+		this._animate(time, {opacity:0}, 'ease-in', events);
+		return this;
+	},
+	_fadeInStart: function() {
+		if (this[0].style.display == 'none') {
+			this[0].style.display = (this[1] && this[1].style.display) || 'block';
+		}
+		if (this[0].style.visibility == 'hidden') {
+			this[0].style.visibility = 'visible';
+		}
+	},
+	fadeIn: function(time, events) {
+		if (! events) {
+			events = {};
+		}
+		if (time <= 0) {
+			time = 1;
+		} else if (this.isUndefined(time)) {
+			time = this.__defaultTime;
+		}
+		events.onStart = this._fadeInStart;
+		this._animate(time, {opacity:1.0}, 'ease-out', events);
+		return this;
 	}
 }, bs.DOMObject.prototype);

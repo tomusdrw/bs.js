@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Animations example</title>
+		<style type="text/css">
+			*{margin:0;padding:0}
+			body{text-align:center}
+		</style>
+		<!-- bs.js -->
+		<script src="../bs.js" type="text/javascript"></script>
+		<script src="../bs.animations.js" type="text/javascript"></script>
+		<script src="../util/Observable.js" type="text/javascript"></script>
+		<!-- /bs.js -->
+	</head>
+	<body>
+		<div id="animations">
+			<h1><a href="#" id="show">Show</a>/
+				<a href="#" id="hide">hide</a>/
+				<a href="#" id="fadeIn">fadeIn</a>/
+				<a href="#" id="fadeOut">fadeOut</a> paragraph below.</h1>
+			<p id="example">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras commodo neque et erat accumsan semper. Integer nisl nulla, fermentum id convallis non, facilisis in metus. Phasellus condimentum tellus sit amet ligula tincidunt quis aliquam tortor euismod. Cras tortor eros, volutpat sed consequat quis, bibendum et justo. Phasellus dictum, velit in faucibus pharetra, augue mauris sodales odio, id viverra lectus enim vel ipsum. Suspendisse potenti. Vestibulum vestibulum ornare risus sed cursus. Quisque id fringilla felis. Aliquam neque tortor, vulputate non tincidunt non, convallis a nulla. Nulla quis adipiscing nisl. Donec accumsan, lacus vitae pretium viverra, lectus elit adipiscing massa, eu pellentesque ligula odio at augue. Nullam id sem at ligula scelerisque tincidunt ac id lacus. Phasellus nec elementum purus.
+			</p>
+			<h1>Second example - animation events.</h1>
+			<h2><a href="#" id="ev_show">show</a> |
+				<a href="#" id="ev_hide">hide</a></h2>
+			<p id="events"></p>
+			<p id="example2">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras commodo neque et erat accumsan semper. Integer nisl nulla, fermentum id convallis non, facilisis in metus. Phasellus condimentum tellus sit amet ligula tincidunt quis aliquam tortor euismod. Cras tortor eros, volutpat sed consequat quis, bibendum et justo. Phasellus dictum, velit in faucibus pharetra, augue mauris sodales odio, id viverra lectus enim vel ipsum. Suspendisse potenti. Vestibulum vestibulum ornare risus sed cursus. Quisque id fringilla felis. Aliquam neque tortor, vulputate non tincidunt non, convallis a nulla. Nulla quis adipiscing nisl. Donec accumsan, lacus vitae pretium viverra, lectus elit adipiscing massa, eu pellentesque ligula odio at augue. Nullam id sem at ligula scelerisque tincidunt ac id lacus. Phasellus nec elementum purus.
+			</p>
+		</div>
+		<script type="text/javascript">
+			(function() {
+				/*
+				 * First paragraph example
+				 */
+				var sh = bs.$('example');
+				bs.$('show').addEventListener('click', (function(e) {
+					e.show();
+				}).bind(null, sh));
+				bs.$('hide').addEventListener('click', (function(e) {
+					e.hide();
+				}).bind(null, sh));
+				bs.$('fadeIn').addEventListener('click', (function(e){
+					e.fadeIn();
+				}).bind(null, sh));
+				bs.$('fadeOut').addEventListener('click', (function(e){
+					e.fadeOut();
+				}).bind(null, sh));
+
+				/*
+				 * Second paragraph example
+				 */
+				sh = bs.$('example2');
+				var event_area = bs.$('events');
+				var events = new bs.util.Observable();
+				//adding start event listener
+				events.addListener('start', (function(ea, element){
+					element[0].style.color = "#f44";
+					ea.html("Start");
+				}).bind(null, event_area));
+				//adding finish event listener
+				events.addListener('finish', (function(ea, element){
+					element[0].style.color = "#222";
+					ea.html("Finish");
+				}).bind(null, event_area));
+
+				bs.$('ev_show').addEventListener('click', (function(e, events){
+					e.show(1500, {width: false, height: true, opacity: true}, events);
+				}).bind(null, sh, events));
+				bs.$('ev_hide').addEventListener('click', (function(e, events){
+					e.hide(600, {width: false, height: true, opacity: true}, events);
+				}).bind(null, sh, events));
+			})();
+		</script>
+	</body>
+</html>

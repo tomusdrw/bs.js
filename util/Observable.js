@@ -8,7 +8,12 @@ bs.util.Observable.prototype = bs.Object.create({
 			console.log('New event: '+evt);
 			this._listeners[evt] = [];
 		}
-		this._listeners[evt].push(fn.bind(context));
+		//no context, assuming that only function has been given
+		if (this.isUndefined(fn)) {
+			this._listeners[evt].push(context);
+		} else {
+			this._listeners[evt].push(fn.bind(context));
+		}
 	},
 	triggerEvent: function (evt, data) {
 		if (!this._listeners[evt]) {

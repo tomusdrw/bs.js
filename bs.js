@@ -35,14 +35,54 @@ bs.$ = function(elem) {
 bs.$._cache = {};
 
 /**
+ * Base Object
+ */
+bs.Object = function(){};
+bs.Object.prototype = {
+	inherit: function(a) {
+		return this.merge(a.prototype);
+	},
+	merge: function(a) {
+		for (var i in a) {
+			if (this.hasOwnProperty(i)) {
+				console.log('[bs.Object.merge] Attribute exists: '+i+'. Obj: ');
+				console.log(this);
+			} else {
+				this[i] = a[i];
+			}
+		}
+		return this;
+	},
+	isUndefined: function(a) {
+		return typeof a === 'undefined';
+	}
+}
+bs.Object.createNew = function(e) {
+	return new this(e);
+};
+bs.Object.create = function(o) {
+	var obj = this.createNew();
+	for (var i in o) {
+		if (obj.hasOwnProperty(i)) {
+			console.log('[bs.Object.create] Attribute exsits: '+i+'. Obj: ');
+			console.log(o);
+		} else {
+			obj[i] = o[i];
+		}
+	}
+	return obj;
+};
+
+/**
  *Some simple optimisations
  */
-bs.opt = {
+bs.opt = bs.Object.create({
 	_fastInnerHTML: function(el, html) {
 		if (el.parentNode) {
 			var c = el.cloneNode(false);
 			c.innerHTML = html;
-			return el.parentNode.replaceChild(c, el);
+			el.parentNode.replaceChild(c, el);
+			return c;
 		} else {
 			el.innerHTML = html;
 			return el;
@@ -69,43 +109,7 @@ bs.opt = {
 		}
 		return c;
 	}
-};
-
-/**
- * Base Object
- */
-bs.Object = function(){};
-bs.Object.prototype = {
-	inherit: function(a) {
-		return this.merge(a.prototype);
-	},
-	merge: function(a) {
-		for (var i in a) {
-			if (this.hasOwnProperty(i)) {
-				console.log('[bs.Object.merge] Attribute exists: '+i+'. Obj: ');
-				console.log(this);
-			} else {
-				this[i] = a[i];
-			}
-		}
-		return this;
-	}
-}
-bs.Object.createNew = function(e) {
-	return new this(e);
-};
-bs.Object.create = function(o) {
-	var obj = this.createNew();
-	for (var i in o) {
-		if (obj.hasOwnProperty(i)) {
-			console.log('[bs.Object.create] Attribute exsits: '+i+'. Obj: ');
-			console.log(o);
-		} else {
-			obj[i] = o[i];
-		}
-	}
-	return obj;
-};
+});
 
 /**
  *Base DOM Object extension
@@ -118,7 +122,7 @@ bs.DOMObject = function(elem){
 	}
 };
 // simples
-bs.DOMObject.prototype = {
+bs.DOMObject.prototype = bs.Object.create({
 	bsdom: true,
 	__constructors: [],
 	addClass: function(name) {
@@ -192,5 +196,5 @@ bs.DOMObject.prototype = {
 		this[0] = null;
 		return this;
 	}
-};
+});
 bs.DOMObject.createNew = bs.Object.createNew;
