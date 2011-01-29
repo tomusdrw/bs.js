@@ -72,6 +72,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 	}()),
 	_css_transform_scale: /(?:scale\()([0-9.]+)/,
 	_css_transform_scaleY: /(?:scale\([0-9.]+, )([0-9.]+)/,
+	_css_transform_scale_g: /scale\(.*?\)/,
 	__useCSS3: true && (function() {
 		//test css3 transitions
 		var ref = bs.DOMObject.prototype;
@@ -153,7 +154,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 					} else {
 						x = 'scale('+x+')';
 					}
-					trans = s[ts].replace(/scale\(.*?\)/, x);
+					trans = s[ts].replace(this._css_transform_scale_g, x);
 					if (!trans) {
 						trans = x;
 					}
@@ -230,23 +231,41 @@ bs.DOMObject.prototype = bs.opt.mix({
 			}
 		}.bind(this, params, events);
 		events.func = ksi;
-		this.addEventListener(this.__transitionEndEventName, ksi, false);
+		this.addEventListener(this.__transitionEndEventName, ksi);
 		//run global start Event
 		if (events.onStart) {
 			events.onStart(params);
 		}
 		//wait for styles to apply?
 		window.setTimeout(function(params, events){
-			var i,unit;
+			var i,unit,x,y,trans,ts,s;
 			//run start animation event
 			if (events && events.triggerEvent) {
 				events.triggerEvent('start', this);
 			}
 			//launch animation
-			//TODO: Include transform: scale special cases
+			s = this[0].style;
+			ts = this._css_transform_preffix + 'transform';
 			for (i=0,end=params[0].length; i<end; i+=1) {
-				unit = this.__propsUnits[params[0][i]] || '';
-				this[0].style[params[0][i]] = params[1][i] + unit;
+				y = params[0][i];
+				x = params[1][i];
+				if (y.indexOf('scale') === 0) {
+					if (y === 'scaleX') {
+						x = 'scale('+x+', 1)';
+					} else if (y === 'scaleY') {
+						x = 'scale(1, '+x+')';
+					} else {
+						x = 'scale('+x+')';
+					}
+					trans = s[ts].replace(this._css_transform_scale_g, x);
+					if (!trans) {
+						trans = x;
+					}
+					s[ts] = trans;
+				} else {
+					unit = this.__propsUnits[y] || '';
+					s[y] = x + unit;
+				}
 			}
 		}.bind(this, params,events), 0);
 		return true;
@@ -267,7 +286,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		//calculate no of frames
 		frames = time/this.__animationInterval;
 		if (isNaN(frames) || frames <= 0) {
-			console.log("Frames is "+frames+". Did you set time correctly?");
+			console.error("Frames is "+frames+". Did you set time correctly?");
 		}
 		if (!this[1]) {
 			this._createCopy(params);
