@@ -206,7 +206,6 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 	},
 	_animateCSS3: function(time, params, methods, events) {
-		//TODO: it looks like it is not working any more for width/height
 		var pref = this._css_transition_preffix;
 		var x,y,z,i,end;
 		x = '';
