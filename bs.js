@@ -101,8 +101,12 @@ bs.opt = bs.Object.create({
 		return +e;
 	},
 	mix: function(a, b) {
-		var c = a || {};
-		for (var i in b) {
+		var c,i;
+		c = {};
+		for (i in a) {
+			c[i] = a[i];
+		}
+		for (i in b) {
 			if (!c.hasOwnProperty(i)) {
 				c[i] = b[i];
 			}
@@ -132,13 +136,31 @@ bs.DOMObject.prototype = bs.Object.create({
 		}
 		return this;
 	},
+	hasClass: function(name) {
+		var c = ' '+this[0].className+' ';
+		return c.indexOf(' '+name+' ') !== -1;
+	},
 	removeClass: function(name) {
-		var c = this[0].className;
-		var x = c.indexOf(name);
-		if (x != -1) {
-			this[0].className = c.substr(0, x-1) + c.substr((x==0)+x+name.length);
+		var c = ' '+this[0].className+' ';
+		var x = c.indexOf(' '+name+' ');
+		if (x !== -1) {
+			this[0].className = c.substr(1, x-1) + c.substring((x==0)+1+x+name.length, c.length-1);
 		}
 		return this;
+	},
+	getWidth: function(style) {
+		style = style || window.getComputedStyle(this[0]);
+		return bs.opt.number(this[0].offsetWidth 
+			- style.paddingLeft.replace('px', '') - style.paddingRight.replace('px', '')
+			- style.borderLeftWidth.replace('px', '') - style.borderRightWidth.replace('px', '')
+		);
+	},
+	getHeight: function(style) {
+		style = style || window.getComputedStyle(this[0], null);
+		return bs.opt.number(this[0].offsetHeight
+			- style.paddingTop.replace('px', '') - style.paddingBottom.replace('px', '')
+			- style.borderTopWidth.replace('px', '') - style.borderBottomWidth.replace('px', '')
+		);
 	},
 	html: function(html) {
 		if (html !== undefined) {
@@ -163,6 +185,10 @@ bs.DOMObject.prototype = bs.Object.create({
 	prepend: function(html) {
 		if (html.bsdom) {
 			html = html[0];
+		}
+		if (html.nodeType) {
+			this[0].insertBefore(html, this[0].firstChild);
+			return this;
 		}
 		bs.opt._fastInnerHTML(this[0], html + this[0].innerHTML);
 		return this;

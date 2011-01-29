@@ -4,6 +4,10 @@
 //constructor
 bs.DOMObject.prototype.__constructors.push(function(ctx, elem) {
 	//binding methods
+	//animation steps
+	ctx.__animationStep = ctx.__animationStep.bind(ctx);
+	ctx.__animationStepScale = ctx.__animationStepScale.bind(ctx);
+	//starts/ends of animations
 	ctx._showEnd = ctx._showEnd.bind(ctx);
 	ctx._hideShowStart = ctx._hideShowStart.bind(ctx);
 	ctx._hideEnd = ctx._hideEnd.bind(ctx);
@@ -13,13 +17,26 @@ bs.DOMObject.prototype.__constructors.push(function(ctx, elem) {
 });
 //extend prototype
 bs.DOMObject.prototype = bs.opt.mix({
-	__animationInterval: 7,
+	__static: bs.DOMObject,
+	__animationInterval: 15,
 	__defaultTime: 500,
 	__propsUnits: {
 		width: 'px',
 		height: 'px',
 		top: 'px',
-		left: 'px'
+		left: 'px',
+		paddingTop: 'px',
+		paddingLeft: 'px',
+		paddingRight: 'px',
+		paddingBottom: 'px',
+		marginTop: 'px',
+		marginBottom: 'px',
+		marginRight: 'px',
+		marginLeft: 'px',
+		borderTopWidth: 'px',
+		borderBottomWidth: 'px',
+		borderLeftWidth: 'px',
+		borderRightWidth: 'px'
 	},
 	__propsDefaultVals: {
 		opacity: 1.0,
@@ -53,6 +70,8 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 		return false;
 	})(),
+	_css_transform_scale: /(?:scale\()([0-9.]+)/,
+	_css_transform_scaleY: /(?:scale\([0-9.]+, )([0-9.]+)/,
 	__useCSS3: false && (function() {
 		//test css3 transitions
 		var ref = bs.DOMObject.prototype;
@@ -82,68 +101,65 @@ bs.DOMObject.prototype = bs.opt.mix({
 	})(),
 	__currentAnimation: null,
 	__animationStep: function(vals) {
-		var x,i,cont;
+		var x,i,cont,s;
+		if (!this[0]) {
+			return false;
+		}
+		s = this[0].style;
 		cont = false;
 		for (i in vals) {
+			//get next value
 			x = vals[i].pop();
 			if (x) {
-				this[0].style[i] = x;
+				s[i] = x;
 				cont = true;
 			}
 		}
 		return cont;
 	},
 	__animationStepScale: function(vals) {
-		var x,i,cont,trans;
+		var x,i,cont,trans,ts,s;
+		if (!this[0]) {
+			return false;
+		}
+		ts = this._css_transform_preffix + 'transform';
+		s = this[0].style;
 		cont = false;
 		for (i in vals) {
+			//get next value
 			x = vals[i].pop();
 			if (x) {
 				//special cases for scale properties
-				if (i == 'scale') {
-					x = 'scale('+x+')';
-					trans = this[0].style[this._css_transform_preffix + 'transform'].replace(/scale\(.*?\)/, x)
+				if (i.indexOf('scale') == 0) {
+					if (i == 'scaleX') {
+						x = 'scale('+x+', 1)';
+					} else if (i == 'scaleY') {
+						x = 'scale(1, '+x+')';
+					} else {
+						x = 'scale('+x+')';
+					}
+					trans = s[ts].replace(/scale\(.*?\)/, x)
 					if (!trans) {
 						trans = x;
 					}
-					this[0].style[this._css_transform_preffix + 'transform'] = trans;
-				} else if (i == 'scaleX') {
-					x = 'scale('+x+', 1)';
-					trans = this[0].style[this._css_transform_preffix + 'transform'].replace(/scale\(.*?\)/, x)
-					if (!trans) {
-						trans = x;
-					}
-					this[0].style[this._css_transform_preffix + 'transform'] = trans;
-				} else if (i == 'scaleY') {
-					x = 'scale(1, '+x+')';
-					trans = this[0].style[this._css_transform_preffix + 'transform'].replace(/scale\(.*?\)/, x)
-					if (!trans) {
-						trans = x;
-					}
-					this[0].style[this._css_transform_preffix + 'transform'] = trans;
+					s[ts] = trans;
 				} else {
-					this[0].style[i] = x;
+					s[i] = x;
 				}
 				cont = true;
 			}
 		}
 		return cont;
 	},
-	__animationFunc: function(vals, events, scale) {
+	__animationFunc: function(vals, events, stepFunc) {
 		//do animation step
-		var cont;
-		if (scale) {
-			cont = this.__animationStepScale(vals);
-		} else {
-			cont = this.__animationStep(vals);
-		}
-		if (cont) {
+		if (stepFunc(vals)) {
 			setTimeout(this.__currentAnimation, this.__animationInterval);
 			return;
 		}
 		//run global finish Event
 		if (events.onFinish) {
-			events.onFinish();
+			events.onFinish(vals);
 		}
 		//run user's finish Event
 		if (events && events.triggerEvent) {
@@ -207,7 +223,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		setTimeout((function(params, events){
 			//run start animation event
 			if (events && events.triggerEvent) {
-				events.triggerEvent('start');
+				events.triggerEvent('start', this);
 			}
 			//launch animation
 			//TODO: Incldue transform: scale special cases
@@ -215,7 +231,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 				var unit = this.__propsUnits[i] || '';
 				this[0].style[i] = params[i] + unit;
 			}
-		}).bind(this, params,events), 0);
+		}).bind(this, params,events), 1);
 		return true;
 	},
 	_animate: function(time, params, methods, events) {
@@ -223,16 +239,21 @@ bs.DOMObject.prototype = bs.opt.mix({
 			methods = [methods];
 		}
 		
-		//TODO: take use of css3 animations
+		//trying to use css3 transitions
 		if (this.__useCSS3 && this._animateCSS3(time, params, methods, events)) {
 			return;
 		}
 
-		var x,vals,frames,i,j,unit,end,scale;
+		var x,vals,frames,i,j,unit,end,scale,key;
+		//object for values
 		vals = {};
+		//calculate no of frames
 		frames = time/this.__animationInterval;
 		if (isNaN(frames) || frames <= 0) {
 			console.log("Frames is "+frames+". Did you set time correctly?");
+		}
+		if (!this[1]) {
+			this._createCopy(params);
 		}
 		// Animation
 		scale = false;
@@ -246,42 +267,43 @@ bs.DOMObject.prototype = bs.opt.mix({
 				//get current value
 				switch(i) {
 					case 'width':
-						x = this[0].offsetWidth;
+						x = this.getWidth();
 						break;
 					case 'height':
-						x = this[0].offsetHeight;
-						break;
-					case 'scale':
-					case 'scaleX':
-						scale = true;
-						x = /(?:scale\()([0-9.]+)/.exec(this[0].style[this._css_transform_preffix + 'transform']);
-						if (x !== null) {
-							x = x[1];
-						}
-						x = x || this.__propsDefaultVals[i];
+						x = this.getHeight();
 						break;
 					case 'scaleY':
 						scale = true;
-						x = /(?:scale\([0-9.]+, )([0-9.]+)/.exec(this[0].style[this._css_transform_preffix + 'transform']);
-						if (x === null) {
-							x = /(?:scale\()([0-9.]+)/.exec(this[0].style[this._css_transform_preffix + 'transform']);
-							if (x !== null) {
-								x = x[1];
-							}
-						} else {
+						x = this._css_transform_scaleY.exec(this[0].style[this._css_transform_preffix + 'transform']);
+						if (x !== null) {
 							x = x[2];
+							break;
+						} //else try to get current scaleY:
+					case 'scale':
+					case 'scaleX':
+						scale = true;
+						x = this._css_transform_scale.exec(this[0].style[this._css_transform_preffix + 'transform']);
+						if (x !== null) {
+							x = x[1];
+						} else {
+							x = this.__propsDefaultVals[i];
 						}
-						x = x || this.__propsDefaultVals[i];
 						break;
 					default:
-						x = this[0].style[i] || this.__propsDefaultVals[i];
+						x = this[0].style[i].replace('px', '') || this.__propsDefaultVals[i];
 				}
-				
 				//to float
 				x = bs.opt.number(x || 0);
 				//create vector of values
 				if (x != params[i]) {
-					this._animateMethod(methods[i] || methods[0] || 'linear', vals[i], x, params[i], frames);
+					//simple cache
+					key = [methods[i] || methods[0] || 'linear', x, params[i], frames];
+					if (!this.isUndefined(this.__static[key])) {
+						vals[i] = this.__static[key].slice(0);
+					} else {
+						this._animateMethod(key[0],	vals[i], key[1], key[2], key[3]);
+						this.__static[key] = vals[i].slice(0);
+					}
 				}
 				//append unit suffix if any
 				unit = this.__propsUnits[i] || false;
@@ -294,12 +316,18 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 
 		//prepare animation
+		//select animation step function
+		var stepFunc;
+		if (scale && this._css_transform_preffix !== false) {
+			stepFunc = this.__animationStepScale;
+		} else {
+			stepFunc = this.__animationStep;
+		}
 		//create animation function
-		this.__currentAnimation = this.__animationFunc.bind(this, vals, events,
-			(scale && this._css_transform_preffix !== false));
+		this.__currentAnimation = this.__animationFunc.bind(this, vals, events, stepFunc);
 		//run global start Event
 		if (events.onStart) {
-			events.onStart();
+			events.onStart(vals);
 		}
 		//run start animation event
 		if (events && events.triggerEvent) {
@@ -308,40 +336,65 @@ bs.DOMObject.prototype = bs.opt.mix({
 		//launch animation
 		this.__currentAnimation();
 	},
-	_createCopy: function() {
+	_createCopy: function(params) {
+		var i,style, s0, s1;
+		//clone node
 		this[1] = this[0].cloneNode(true);
-		//setting default width/height
-		var s = this[1].style;
-		var s2 = this[0].style;
-		s.display = s.display || 'block';
-
-		s.width = this[0].offsetWidth+'px';
-		s2.width = s.width;
-		s.height = this[0].offsetHeight+'px';
-		s2.height = s.height;
-		s.opacity = this[0].style.opacity || 1.0;
-		s2.opacity = s.opacity;
+		//short
+		s0 = this[0].style;
+		s1 = this[1].style;
+		//get computed styles
+		style = window.getComputedStyle(this[0], null);
+		//setting default values
+		s1.display = s1.display || 'block';
+		for (i in params) {
+			if (params[i] !== false && style[i]) {
+				s0[i] = s1[i] = style[i];
+			}
+		}
 	},
 	/**
 	 * Function runs on start of animation when hide() OR show() (!) was called.
 	 */
-	_hideShowStart: function() {
-		//creating copy
-		if (!this[1]) {
-			this._createCopy();
-		}
+	_hideShowStart: function(params) {
 		var s = this[0].style;
 		s.display = "block";
 		s.overflow = 'hidden';
+		s.visibility = 'visible';
 	},
-	_showEnd: function() {
+	_showEnd: function(params) {
+		var i;
 		var s = this[0].style;
 		var s1 = this[1].style;
-		s.display = s1.display;
+		if (s1.display !== 'none') {
+			s.display = s1.display;
+		}
 		s.overflow = s1.overflow;
+		for (i in params) {
+			s[i] = s1[i];
+		}
 	},
 	_hideEnd: function() {
 		this[0].style.display = "none";
+		this[0].style.visibility = 'hidden';
+	},
+	_hideShowParams: function(params) {
+		var mix = {
+			height: true,
+			width: true,
+			opacity: true
+		};
+		if (!params || params.height) {
+			mix.paddingTop = mix.paddingBottom = true;
+			mix.marginTop = mix.marginBottom = true;
+			mix.borderTopWidth = mix.borderBottomWidth = true;
+		}
+		if (!params || params.width) {
+			mix.paddingLeft = mix.paddingRight = true;
+			mix.marginLeft = mix.marginRight = true;
+			mix.borderLeftWidth = mix.borderRightWidth = true;
+		}
+		return bs.opt.mix(params, mix);
 	},
 	show: function(time, params, events) {
 		if (this.isUndefined(time)) {
@@ -351,34 +404,33 @@ bs.DOMObject.prototype = bs.opt.mix({
 			this._showEnd();
 			return this;
 		}
-		params = bs.opt.mix(params, {
-			height: true,
-			width: true,
-			opacity: true
+
+		params = this._hideShowParams(params);
+		events = bs.opt.mix(events || {}, {
+			onStart: this._hideShowStart,
+			onFinish: this._showEnd
 		});
-		if (! events) {
-			events = {};
-		} else {
-			events = bs.opt.mix({}, events);
-		}
-		if (this.isUndefined(events.onStart)) {
-			events.onStart = this._hideShowStart;
-		}
-		if (this.isUndefined(events.onFinish)) {
-			events.onFinish =  this._showEnd;
-		}
+		var i,s;
 		if (!this[1]) {
-			this._createCopy();
+			this._createCopy(params);
 		}
-		for (var i in params) {
+		s = this[0].style;
+		if (s.visibility == 'hidden' || s.display == 'none') {
+			for (i in params) {
+				if (params[i]) {
+					s[i] = 0;
+				}
+			}
+		}
+		for (i in params) {
 			if (params.hasOwnProperty(i)) {
 				if (params[i] === true) {
-					if (this[1] && this[1].style[i] && this[1].style[i].length) {
+					if (this[1] && this[1].style[i]) {
 						params[i] = bs.opt.number(this[1].style[i].replace('px', ''));
 					} else {
 						params[i] = this.__propsDefaultVals[i] || 0;
 					}
-				} else if (params[i] === false) {
+				} else {
 					delete params[i];
 				}
 			}
@@ -395,22 +447,12 @@ bs.DOMObject.prototype = bs.opt.mix({
 			this._hideEnd();
 			return this;
 		}
-		params = bs.opt.mix(params, {
-			height: true,
-			width: true,
-			opacity: true
+		params = this._hideShowParams(params);
+		events = bs.opt.mix(events || {}, {
+			onStart: this._hideShowStart,
+			onFinish: this._hideEnd
 		});
-		if (! events) {
-			events = {};
-		} else {
-			events = bs.opt.mix({}, events);
-		}
-		if (this.isUndefined(events.onStart)) {
-			events.onStart = this._hideShowStart;
-		}
-		if (this.isUndefined(events.onFinish)) {
-			events.onFinish =  this._hideEnd;
-		}
+
 		for (var i in params) {
 			if (params.hasOwnProperty(i)) {
 				if (params[i] === true) {
@@ -425,7 +467,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		return this;
 	},
 	_destroyEnd: function() {
-		if (this[0].parentNode) {
+		if (this[0] && this[0].parentNode) {
 			this[0].parentNode.removeChild(this[0]);
 		}
 		this[0] = null;
@@ -434,12 +476,9 @@ bs.DOMObject.prototype = bs.opt.mix({
 		if (! params) {
 			params = {};
 		}
-		if (! events) {
-			events = {};
-		}
-		if (this.isUndefined(events.onFinish)) {
-			events.onFinish = this._destroyEnd;
-		}
+		events = bs.opt.mix(events || {}, {
+			onFinish: this._destroyEnd
+		});
 		return this.hide(time, params, events);
 	},
 	_fadeOutStart: function() {
