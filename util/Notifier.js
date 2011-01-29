@@ -92,7 +92,7 @@ bs.util.Notifier.prototype = bs.Object.create({
 	},
 	_delayHideMsg: function(time) {
 		if (time > 0) {
-			setTimeout(this._hideMsg, time);
+			window.setTimeout(this._hideMsg, time);
 		}
 	},
 	display: function(msg, time, title) {
@@ -100,7 +100,7 @@ bs.util.Notifier.prototype = bs.Object.create({
 			time = this._settings.fadeTimeout;
 		}
 		var ttime = Math.floor(this._getTime() + time);
-		elem = this._createNode(msg, title);
+		var elem = this._createNode(msg, title);
 		this._push(elem, ttime);
 		elem.hide(0);
 		if (this._settings.append) {

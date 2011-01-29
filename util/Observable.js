@@ -16,11 +16,15 @@ bs.util.Observable.prototype = bs.Object.create({
 		}
 	},
 	triggerEvent: function (evt, data) {
+		var i,t;
 		if (!this._listeners[evt]) {
 			console.log('No event listeners on: '+evt);
 		} else {
-			for (var i in this._listeners[evt]) {
-				this._listeners[evt][i](data);
+			t = this._listeners[evt];
+			for (i in t) {
+				if (t.hasOwnProperty(i)) {
+					t[i](data);
+				}
 			}
 		}
 	}

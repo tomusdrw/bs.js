@@ -49,7 +49,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 	_css_transform_preffix: (function(){
 		var test_obj = document.createElement('div');
 		test_obj.style.cssText = 'transform: scale(2)';
-		if (test_obj.style['transform']) {
+		if (test_obj.style.transform) {
 			console.log("Transformations detected.");
 			return '';
 		}
@@ -69,7 +69,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 			return '-o-';
 		}
 		return false;
-	})(),
+	}()),
 	_css_transform_scale: /(?:scale\()([0-9.]+)/,
 	_css_transform_scaleY: /(?:scale\([0-9.]+, )([0-9.]+)/,
 	__useCSS3: false && (function() {
@@ -98,7 +98,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 		test_obj = null;
 		return ref._css_transition_preffix !== false;
-	})(),
+	}()),
 	__currentAnimation: null,
 	__animationStep: function(vals) {
 		var x,i,cont,s;
@@ -108,11 +108,13 @@ bs.DOMObject.prototype = bs.opt.mix({
 		s = this[0].style;
 		cont = false;
 		for (i in vals) {
-			//get next value
-			x = vals[i].pop();
-			if (x) {
-				s[i] = x;
-				cont = true;
+			if (vals.hasOwnProperty(i)) {
+				//get next value
+				x = vals[i].pop();
+				if (x) {
+					s[i] = x;
+					cont = true;
+				}
 			}
 		}
 		return cont;
@@ -126,27 +128,29 @@ bs.DOMObject.prototype = bs.opt.mix({
 		s = this[0].style;
 		cont = false;
 		for (i in vals) {
-			//get next value
-			x = vals[i].pop();
-			if (x) {
-				//special cases for scale properties
-				if (i.indexOf('scale') == 0) {
-					if (i == 'scaleX') {
-						x = 'scale('+x+', 1)';
-					} else if (i == 'scaleY') {
-						x = 'scale(1, '+x+')';
+			if (vals.hasOwnProperty(i)) {
+				//get next value
+				x = vals[i].pop();
+				if (x) {
+					//special cases for scale properties
+					if (i.indexOf('scale') === 0) {
+						if (i === 'scaleX') {
+							x = 'scale('+x+', 1)';
+						} else if (i === 'scaleY') {
+							x = 'scale(1, '+x+')';
+						} else {
+							x = 'scale('+x+')';
+						}
+						trans = s[ts].replace(/scale\(.*?\)/, x);
+						if (!trans) {
+							trans = x;
+						}
+						s[ts] = trans;
 					} else {
-						x = 'scale('+x+')';
+						s[i] = x;
 					}
-					trans = s[ts].replace(/scale\(.*?\)/, x)
-					if (!trans) {
-						trans = x;
-					}
-					s[ts] = trans;
-				} else {
-					s[i] = x;
+					cont = true;
 				}
-				cont = true;
 			}
 		}
 		return cont;
@@ -154,7 +158,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 	__animationFunc: function(vals, events, stepFunc) {
 		//do animation step
 		if (stepFunc(vals)) {
-			setTimeout(this.__currentAnimation, this.__animationInterval);
+			window.setTimeout(this.__currentAnimation, this.__animationInterval);
 			return;
 		}
 		//run global finish Event
@@ -182,7 +186,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 					vals.push(vals[i-1]+ (frames - i) * x);
 				}
 				break;
-			case 'linear':
+			//case 'linear':
 			default:
 				x = (start - end)/frames;
 				for (i=1;i<frames;i+=1) {
@@ -195,7 +199,6 @@ bs.DOMObject.prototype = bs.opt.mix({
 		var x,y,z,i;
 		x = '';
 		y = '';
-		t = '';
 		for (i in params) {
 			if (params.hasOwnProperty(i)) {
 				x = x + i +',';
@@ -208,11 +211,11 @@ bs.DOMObject.prototype = bs.opt.mix({
 		this[0].style[pref + 'transition-duration'] = time+"ms";
 		this[0].style[pref + 'transition-delay'] = '0';
 		//attach onFinish events TODO: move this func to prototype
-		var ksi = (function() {
+		var ksi = function() {
 			this.__animationStep([[]], events);
 			//TODO: How to avoid arguments.callee?
 			this[0].removeEventListener('transitionend', arguments.callee, false);
-		}).bind(this);
+		}.bind(this);
 		this.addEventListener('transitionend', ksi);
 
 		//run global start Event
@@ -220,7 +223,8 @@ bs.DOMObject.prototype = bs.opt.mix({
 			events.onStart();
 		}
 		//wait for styles to apply?
-		setTimeout((function(params, events){
+		window.setTimeout(function(params, events){
+			var i,unit;
 			//run start animation event
 			if (events && events.triggerEvent) {
 				events.triggerEvent('start', this);
@@ -228,10 +232,12 @@ bs.DOMObject.prototype = bs.opt.mix({
 			//launch animation
 			//TODO: Incldue transform: scale special cases
 			for (i in params) {
-				var unit = this.__propsUnits[i] || '';
-				this[0].style[i] = params[i] + unit;
+				if (params.hasOwnProperty(i)) {
+					unit = this.__propsUnits[i] || '';
+					this[0].style[i] = params[i] + unit;
+				}
 			}
-		}).bind(this, params,events), 1);
+		}.bind(this, params,events), 1);
 		return true;
 	},
 	_animate: function(time, params, methods, events) {
@@ -295,7 +301,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 				//to float
 				x = bs.opt.number(x || 0);
 				//create vector of values
-				if (x != params[i]) {
+				if (x !== params[i]) {
 					//simple cache
 					key = [methods[i] || methods[0] || 'linear', x, params[i], frames];
 					if (!this.isUndefined(this.__static[key])) {
@@ -371,7 +377,9 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 		s.overflow = s1.overflow;
 		for (i in params) {
-			s[i] = s1[i];
+			if (params.hasOwnProperty(i)) {
+				s[i] = s1[i];
+			}
 		}
 	},
 	_hideEnd: function() {
@@ -415,7 +423,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 			this._createCopy(params);
 		}
 		s = this[0].style;
-		if (s.visibility == 'hidden' || s.display == 'none') {
+		if (s.visibility === 'hidden' || s.display === 'none') {
 			for (i in params) {
 				if (params[i]) {
 					s[i] = 0;
@@ -440,6 +448,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		return this;
 	},
 	hide: function(time, params, events) {
+		var i;
 		if (this.isUndefined(time)) {
 			time = this.__defaultTime;
 		}
@@ -453,7 +462,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 			onFinish: this._hideEnd
 		});
 
-		for (var i in params) {
+		for (i in params) {
 			if (params.hasOwnProperty(i)) {
 				if (params[i] === true) {
 					params[i] = 0;
@@ -500,10 +509,10 @@ bs.DOMObject.prototype = bs.opt.mix({
 		return this;
 	},
 	_fadeInStart: function() {
-		if (this[0].style.display == 'none') {
+		if (this[0].style.display === 'none') {
 			this[0].style.display = (this[1] && this[1].style.display) || 'block';
 		}
-		if (this[0].style.visibility == 'hidden') {
+		if (this[0].style.visibility === 'hidden') {
 			this[0].style.visibility = 'visible';
 		}
 	},
