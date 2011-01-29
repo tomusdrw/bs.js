@@ -84,7 +84,7 @@
 				$('#toggle_jquery').bind('click', (function(elems){
 					var st = (new Date()).getTime();
 					for(var e in elems) {
-						elems[e].toggle(500, 'linear');
+						elems[e].toggle(1100, 'linear');
 					}
 					console.log("jQuery toggle: " +((new Date()).getTime() - st));
 				}).bind(null, jq));

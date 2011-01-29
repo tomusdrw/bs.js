@@ -105,13 +105,8 @@ bs.opt = bs.Object.create({
 	mix: function(a, b) {
 		var c,i;
 		c = {};
-		if (a && a.prototype) {
-			c.prototype = a.prototype;
-		}
 		for (i in a) {
-			if (a.hasOwnProperty(i)) {
-				c[i] = a[i];
-			}
+			c[i] = a[i];
 		}
 		for (i in b) {
 			if (!c.hasOwnProperty(i)) {
