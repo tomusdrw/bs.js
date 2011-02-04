@@ -19,6 +19,7 @@ bs.DOMObject.prototype.__constructors.push(function(ctx, elem) {
 bs.DOMObject.prototype = bs.opt.mix({
 	__static: bs.DOMObject,
 	__animationInterval: 17,
+	__animationTimeout: 15,
 	__defaultTime: 300,
 	__propsUnits: {
 		width: 'px',
@@ -73,7 +74,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 	_css_transform_scale: /(?:scale\()([0-9.]+)/,
 	_css_transform_scaleY: /(?:scale\([0-9.]+, )([0-9.]+)/,
 	_css_transform_scale_g: /scale\(.*?\)/,
-	__useCSS3: true && (function() {
+	__useCSS3: false && (function() {
 		//test css3 transitions
 		var ref = bs.DOMObject.prototype;
 		ref._css_transition_preffix = false;
@@ -115,36 +116,45 @@ bs.DOMObject.prototype = bs.opt.mix({
 		return ts.toLowerCase();
 	}()),
 	__currentAnimation: null,
-	__animationStep: function(vals) {
-		var x,i,end,cont,s;
+	__animationStep: function(vals, expectedTime, time) {
+		var x,i,end,cont,s,t,skip;
 		if (!this[0]) {
 			return false;
 		}
 		s = this[0].style;
 		cont = false;
-		//TODO: frame skipping if animation takes more than expected
+		skip = bs.opt.posFloor((time - expectedTime)/this.__animationTimeout);
 		for (i=0,end=vals[0].length;i<end;i+=1) {
 			//get next value
 			x = vals[1][i].pop();
-			if (x) {
+			if (skip) {
+				x = vals[1][i].splice(-skip, skip);
+				x = x[0];
+			}
+			if (!this.isUndefined(x)) {
 				s[vals[0][i]] = x;
 				cont = true;
 			}
 		}
 		return cont;
 	},
-	__animationStepScale: function(vals) {
-		var x,i,cont,trans,ts,s;
+	__animationStepScale: function(vals, expectedTime, time) {
+		var x,i,cont,trans,ts,s,t,skip,end;
 		if (!this[0]) {
 			return false;
 		}
 		ts = this._css_transform_preffix + 'transform';
 		s = this[0].style;
 		cont = false;
+		skip = bs.opt.posFloor((time - expectedTime)/this.__animationTimeout)+1;
 		for (i=0,end=vals[0].length;i<end;i+=1) {
 			//get next value
 			x = vals[1][i].pop();
-			if (x) {
+			if (skip) {
+				x = vals[1][i].splice(-skip, skip);
+				x = x[0];
+			}
+			if (!this.isUndefined(x)) {
 				//special cases for scale properties
 				if (vals[0][i].indexOf('scale') === 0) {
 					if (i === 'scaleX') {
@@ -167,10 +177,11 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 		return cont;
 	},
-	__animationFunc: function(vals, events, stepFunc) {
+	__animationFunc: function(vals, events, stepFunc, expectedTime) {
 		//do animation step
-		if (stepFunc(vals)) {
-			window.setTimeout(this.__currentAnimation, this.__animationInterval);
+		var time =  (new Date()).getTime();
+		if (stepFunc(vals, expectedTime, time)) {
+			window.setTimeout(this.__currentAnimation, this.__animationTimeout, time+this.__animationInterval);
 			return;
 		}
 		//run global finish Event
@@ -280,7 +291,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 			return;
 		}
 
-		var x,vals,frames,i,j,unit,end,scale,key,end2;
+		var x,vals,frames,i,j,c,unit,end,scale,key,end2;
 		//object for values
 		vals = [[],[]];
 		//calculate no of frames
@@ -293,13 +304,8 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 		// Animation
 		scale = false;
+		c = 0;
 		for (i=0,end2=params[0].length; i<end2; i+=1) {
-			vals[0][i] = params[0][i];
-			//create new array
-			vals[1][i] = [];
-			//push last value as first element
-			vals[1][i].push(params[1][i]);
-
 			//get current value
 			switch(params[0][i]) {
 				case 'width':
@@ -332,24 +338,33 @@ bs.DOMObject.prototype = bs.opt.mix({
 			x = bs.opt.number(x || 0);
 			//create vector of values
 			if (x !== params[1][i]) {
-				//simple cache
-				key = [methods[i] || methods[0] || 'linear', x, params[1][i], frames];
-				if (!this.isUndefined(this.__static[key])) {
-					vals[1][i] = this.__static[key].slice(0);
-				} else {
-					this._animateMethod(key[0],	vals[1][i], key[1], key[2], key[3]);
-					this.__static[key] = vals[1][i].slice(0);
-				}
-			}
-			//append unit suffix if any
-			unit = this.__propsUnits[params[0][i]] || false;
-			if (unit) {
-				for (j=0,end=vals[1][i].length;j<end;j+=1) {
-					vals[1][i][j] += unit;
-				}
-			}
-		}
+				vals[0][c] = params[0][i];
+				//create new array
+				vals[1][c] = [];
+				//push last value as first element
+				vals[1][c].push(params[1][i]);
 
+				//simple cache
+				key = [methods[c] || methods[0] || 'linear', x, params[1][i], frames];
+				if (!this.isUndefined(this.__static[key])) {
+					vals[1][c] = this.__static[key].slice(0);
+				} else {
+					this._animateMethod(key[0],	vals[1][c], key[1], key[2], key[3]);
+					this.__static[key] = vals[1][c].slice(0);
+				}
+
+				//append unit suffix if any
+				unit = this.__propsUnits[params[0][i]] || false;
+				if (unit) {
+					for (j=0,end=vals[1][c].length;j<end;j+=1) {
+						vals[1][c][j] += unit;
+					}
+				}
+				
+				c++;
+			}
+			
+		}
 		//prepare animation
 		//select animation step function
 		var stepFunc;
@@ -369,7 +384,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 			events.triggerEvent('start', this);
 		}
 		//launch animation
-		this.__currentAnimation();
+		this.__currentAnimation((new Date()).getTime());
 	},
 	_createCopy: function(params) {
 		var i,end,x,style, s0, s1;

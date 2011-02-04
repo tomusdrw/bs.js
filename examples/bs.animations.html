@@ -70,11 +70,13 @@
 				events.addListener('start', (function(ea, element){
 					element[0].style.color = "#f44";
 					ea.html("Start");
+					console.time("Animation");
 				}).bind(null, event_area));
 				//adding finish event listener
 				events.addListener('finish', (function(ea, element){
 					element[0].style.color = "#222";
 					ea.html("Finish");
+					console.timeEnd("Animation");
 				}).bind(null, event_area));
 
 				bs.$('ev_show').addEventListener('click', (function(e, events){
