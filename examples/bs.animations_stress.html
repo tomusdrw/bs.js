@@ -82,35 +82,40 @@
 				 * jQuery test
 				 */
 				$('#toggle_jquery').bind('click', (function(elems){
-					var st = (new Date()).getTime();
+					console.time('jQuery toggle');
 					for(var e in elems) {
 						elems[e].toggle(1100, 'linear');
 					}
-					console.log("jQuery toggle: " +((new Date()).getTime() - st));
+					console.timeEnd('jQuery toggle');
 				}).bind(null, jq));
 				bs.$('show').addEventListener('click', (function(x) {
+					console.time('bs.js show');
 					var st = (new Date()).getTime();
 					for(var e in x) {
 						x[e].show();
 					}
-					console.log("bs.js show: " + ((new Date()).getTime() - st));
+					console.timeEnd('bs.js show');
 				}).bind(null, sh));
 				bs.$('hide').addEventListener('click', (function(x) {
-					var st = (new Date()).getTime();
+					console.time('bs.js hide');
 					for(var e in x) {
 						x[e].hide();
 					}
-					console.log("bs.js hide: " + ((new Date()).getTime() - st));
+					console.timeEnd('bs.js hide');
 				}).bind(null, sh));
 				bs.$('fadeIn').addEventListener('click', (function(x){
+					console.time('bs.js fadeIn');
 					for(var e in x) {
 						x[e].fadeIn();
 					}
+					console.timeEnd('bs.js fadeIn');
 				}).bind(null, sh));
 				bs.$('fadeOut').addEventListener('click', (function(x){
+					console.time('bs.js fadeOut');
 					for(var e in x) {
 						x[e].fadeOut();
 					}
+					console.timeEnd('bs.js fadeOut');
 				}).bind(null, sh));
 
 				/*
