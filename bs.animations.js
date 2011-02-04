@@ -74,7 +74,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 	_css_transform_scale: /(?:scale\()([0-9.]+)/,
 	_css_transform_scaleY: /(?:scale\([0-9.]+, )([0-9.]+)/,
 	_css_transform_scale_g: /scale\(.*?\)/,
-	__useCSS3: false && (function() {
+	__useCSS3: true && (function() {
 		//test css3 transitions
 		var ref = bs.DOMObject.prototype;
 		ref._css_transition_preffix = false;
@@ -146,7 +146,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		ts = this._css_transform_preffix + 'transform';
 		s = this[0].style;
 		cont = false;
-		skip = bs.opt.posFloor((time - expectedTime)/this.__animationTimeout)+1;
+		skip = bs.opt.posFloor((time - expectedTime)/this.__animationTimeout);
 		for (i=0,end=vals[0].length;i<end;i+=1) {
 			//get next value
 			x = vals[1][i].pop();
@@ -295,13 +295,11 @@ bs.DOMObject.prototype = bs.opt.mix({
 		//object for values
 		vals = [[],[]];
 		//calculate no of frames
-		frames = time/this.__animationInterval;
+		frames = bs.opt.posFloor(time/this.__animationInterval);
 		if (isNaN(frames) || frames <= 0) {
 			console.error("Frames is "+frames+". Did you set time correctly?");
 		}
-		if (!this[1]) {
-			this._createCopy(params);
-		}
+		this._createCopy(params);
 		// Animation
 		scale = false;
 		c = 0;
@@ -387,20 +385,28 @@ bs.DOMObject.prototype = bs.opt.mix({
 		this.__currentAnimation((new Date()).getTime());
 	},
 	_createCopy: function(params) {
-		var i,end,x,style, s0, s1;
-		//clone node
-		this[1] = this[0].cloneNode(true);
+		var i,end,x,style, s0, s1, y;
+		style = window.getComputedStyle(this[0], null);
+		y = false;
+		if (!this[1]) {
+			//clone node
+			this[1] = this[0].cloneNode(true);
+			//get computed styles
+			this[1].style.cssText = style.cssText;
+			y = true;
+		}
 		//short
 		s0 = this[0].style;
 		s1 = this[1].style;
-		//get computed styles
-		style = window.getComputedStyle(this[0], null);
+		
 		//setting default values
-		s1.display = s1.display || 'block';
 		for (i=0,end=params[0].length; i<end; i+=1) {
 			x = params[0][i];
 			if (params[1][i] !== false && style[x]) {
-				s0[x] = s1[x] = style[x];
+				s0[x] = style[x];
+				if (y) {
+					s1[x] = style[x];
+				}
 			}
 		}
 	},
@@ -469,9 +475,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 			this._showEnd(p);
 			return this;
 		}
-		if (!this[1]) {
-			this._createCopy(p);
-		}
+		this._createCopy(p);
 		s = this[0].style;
 		if (s.visibility === 'hidden' || s.display === 'none') {
 			for (i=0,end=p[0].length; i<end; i+=1) {
