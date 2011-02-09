@@ -32,6 +32,16 @@ bs.DOMObject.prototype = bs.Object.create({
 		}
 		return this;
 	},
+	getData: function(data) {
+		if (this.isUndefined(this[0].dataset)) {
+			return this[0].getAttribute('data-'+data);
+		}
+		return this[0].dataset[data];
+	},
+	setData: function(data, val) {
+		this[0].setAttribute('data-'+data, val);
+		return this;
+	},
 	getWidth: function(style) {
 		style = style || window.getComputedStyle(this[0], null);
 		return bs.opt.number(this[0].offsetWidth
