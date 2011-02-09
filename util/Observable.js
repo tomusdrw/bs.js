@@ -2,7 +2,7 @@ bs.util.Observable = function(){
 	this._listeners = [];
 };
 bs.util.Observable.prototype = bs.Object.create({
-	_listeners: [],
+	_listeners: null,
 	addListener: function (evt, context, fn) {
 		if (!this._listeners[evt]) {
 			console.log('New event: '+evt);
