@@ -186,7 +186,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 		//run global finish Event
 		if (events.onFinish) {
-			events.onFinish(vals);
+			events.onFinish(vals, this);
 		}
 		//run user's finish Event
 		if (events && events.triggerEvent) {
@@ -245,7 +245,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		this.addEventListener(this.__transitionEndEventName, ksi);
 		//run global start Event
 		if (events.onStart) {
-			events.onStart(params);
+			events.onStart(params, this);
 		}
 		//wait for styles to apply?
 		window.setTimeout(function(params, events){
@@ -278,7 +278,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 					s[y] = x + unit;
 				}
 			}
-		}.bind(this, params,events), 0);
+		}.bind(this, params, events), 0);
 		return true;
 	},
 	_animate: function(time, params, methods, events) {
@@ -375,7 +375,7 @@ bs.DOMObject.prototype = bs.opt.mix({
 		this.__currentAnimation = this.__animationFunc.bind(this, vals, events, stepFunc);
 		//run global start Event
 		if (events.onStart) {
-			events.onStart(vals);
+			events.onStart(vals, this);
 		}
 		//run start animation event
 		if (events && events.triggerEvent) {
@@ -383,6 +383,17 @@ bs.DOMObject.prototype = bs.opt.mix({
 		}
 		//launch animation
 		this.__currentAnimation((new Date()).getTime());
+	},
+	animate: function(time, params, methods, events) {
+		var p,i;
+		p = [[], []];
+		for (i in params) {
+			if (params.hasOwnProperty(i)) {
+				p[0].push(i);
+				p[1].push(params[i]);
+			}
+		}
+		return this._animate(time, p, methods, events);
 	},
 	_createCopy: function(params) {
 		var i,end,x,style, s0, s1, y;
