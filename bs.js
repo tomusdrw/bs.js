@@ -26,6 +26,9 @@ bs.$ = function(elem) {
 		elem = document.getElementById(elem);
 	}
 	if (elem) {
+		if (elem.bsdom) {
+			return elem;
+		}
 		elem = bs.DOMObject.createNew(elem);
 	} else {
 		elem = null;
@@ -33,7 +36,22 @@ bs.$ = function(elem) {
 	return elem;
 };
 bs.$._cache = {};
-
+bs.extend = function(x /*args*/) {
+	var i,j,end,a,
+		b = Array.prototype.slice.call(arguments, 1);
+	for (j=0,end=b.length;j<end;j+=1) {
+		a = b[j];
+		for (i in a) {
+			if (x.hasOwnProperty(i)) {
+				console.log('[bs.Object.merge] Attribute exists: '+i+'. Obj: ');
+				console.log(x);
+			} else {
+				x[i] = a[i];
+			}
+		}
+	}
+	return x;
+};
 /**
  * Base Object
  */
@@ -42,17 +60,10 @@ bs.Object.prototype = {
 	inherit: function(a) {
 		return this.merge(a.prototype);
 	},
-	merge: function(a) {
-		var i;
-		for (i in a) {
-			if (this.hasOwnProperty(i)) {
-				console.log('[bs.Object.merge] Attribute exists: '+i+'. Obj: ');
-				console.log(this);
-			} else {
-				this[i] = a[i];
-			}
-		}
-		return this;
+	merge: function() {
+		var a = Array.prototype.slice.call(arguments,0);
+		a.unshift(this);
+		return bs.extend.apply(null, a);
 	},
 	isUndefined: function(a) {
 		return typeof a === 'undefined';
