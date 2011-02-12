@@ -61,7 +61,7 @@ bs.DOMObject.prototype = bs.Object.create({
 			if (html.bsdom) {
 				html = html[0];
 			}
-			this[0] = bs.opt._fastInnerHTML(this[0], html);
+			this[0].innerHTML = html;
 			return this;
 		}
 		return this[0].innerHTML;
